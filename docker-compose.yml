@@ -1,0 +1,38 @@
+version: '2'
+services:
+    db:
+        image: mysql:5.5
+        user: mysql
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: symfony
+            MYSQL_USER: symfony
+            MYSQL_PASSWORD: symfony
+        #volumes:
+            #- ./var/dockerData/mysql/:/var/lib/mysql
+    app:
+        build: .
+        expose:
+            - "9001"
+        volumes:
+            - .:/var/www/app
+            - ./var/logs/:/var/www/symfony/app/logs
+        depends_on:
+            - db
+        env_file: .env
+    nginx:
+        build: ./etc/docker/nginx
+        ports:
+            - "8080:80"
+        links:
+            - app
+        volumes_from:
+            - app
+        labels:
+          # Allows integration with dnsdock for service discovery
+          # see https://github.com/aacebedo/dnsdock
+          com.dnsdock.alias: symfony.docker
+          com.dnsdock.name: web
+          com.dnsdocker.image: symfony
